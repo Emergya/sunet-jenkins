@@ -3,8 +3,8 @@ version: '3.7'
 services:
 
   jenkins:
-    # In prod we use the image tagged stable
-    image: docker.sunet.se/sunet/docker-jenkins:stable
+    # We will use custom image with more plugins
+    build: .
     # TODO: Move this to secrets?
     environment:
       GITHUB_TOKEN: ${GITHUB_TOKEN?GITHUB_TOKEN not set, set it in .env}
@@ -13,12 +13,21 @@ services:
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:?GITHUB_CLIENT_SECRET not set, set it in .env}
       SLACK_TOKEN: ${SLACK_TOKEN?SLACK_TOKEN not set, set it in .env}
       DOCKER_URI: ${DOCKER_URI?DOCKER_URI not set, set it in .env}
+      GITHUB_ORGANIZATIONS: "{GITHUB_ORGANIZATIONS-SUNET}"
+      ADMIN_ADDRESS: "${ADMIN_ADDRESS-dev@sunet.se}"
+      JENKINS_URL: "${JENKINS_URL-ci.sunet.se}"
+      REPOS: "${REPOS-}"
+      ORGS: "${ORGS-}"
+
     volumes:
 # Enable named jenkins_home volume if you would like a persistent jenkins_home
 # Othervise, jcasc and job-dsl will populate one.
       - jenkins_home:/var/jenkins_home:rw
+      # Add the local docker-socket for running agents on.
+      - /var/run/docker.sock:/var/run/docker.sock:rw
       # Add config based on mode
       - ../jcasc_configs/jenkins-prod_mode.yaml:/var/jenkins_home/casc_configs/jenkins-prod_mode.yaml:ro
+      - ../jcasc_configs/SSH_TO_CONNECT_AGENT_secret.groovy:/var/jenkins_home/init.groovy.d/SSH_TO_CONNECT_AGENT_secret.groovy:ro
     secrets:
       - PUBLISH_OVER_SSH_KEY
       - DOCKER_SERVER_CA_CERTIFICATE
@@ -28,13 +37,25 @@ services:
   pound:
     volumes:
       - ${DEHYDRATED_BUNDLE:?DEHYDRATED_BUNDLE not set, set it in .env}:/etc/ssl/private/ci.sunet.se.pem
+      - ${DEHYDRATED_BUNDLE:?DEHYDRATED_BUNDLE not set, set it in .env}:/etc/ssl/private/ed-integrations.com.pem
+      - ${DEHYDRATED_BUNDLE:?DEHYDRATED_BUNDLE not set, set it in .env}:/etc/ssl/private/${JENKINS_URL-empty}.pem
 
   always-https:
     image: docker.sunet.se/always-https
     ports:
       - 80:80
     environment:
-      - "ACME_URL=http://acme-c.sunet.se"
+      - "ACME_URL=http://${JENKINS_URL-empty}"
+
+  registry:
+    image: registry:2
+    ports:
+      - 5000:5000
+    restart: always
+    depends_on:
+      - jenkins
+    networks:
+      jenkins_net:
 
 volumes:
   jenkins_home:

@@ -5,7 +5,14 @@ services:
   jenkins:
     environment:
       CASC_JENKINS_CONFIG: /var/jenkins_home/casc_configs
+      SLACK_TEAM: "${SLACK_TEAM-SUNET}"
+      SLACK_ROOM: "${SLACK_ROOM-devops-builds}"
+      BOOTSTRAP_GIT_URL: "${BOOTSTRAP_GIT_URL-sunet/bootstrap-docker-builds}"
+      DOCKERHUB_URL: "${DOCKERHUB_URL-docker.sunet.se}"
+      GIT_GLOBAL_CONFIG_EMAIL: "${GIT_GLOBAL_CONFIG_EMAIL-dev@sunet.se}"
       GITHUB_TOKEN: "${GITHUB_TOKEN}"
+      OVERRIDE_BUILD_BRANCHES: "${OVERRIDE_BUILD_BRANCHES-}"
+
     image: docker.sunet.se/sunet/docker-jenkins
     networks:
       jenkins_net:

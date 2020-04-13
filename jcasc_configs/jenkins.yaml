@@ -54,7 +54,7 @@ jenkins:
 unclassified:
   gitSCM:
     createAccountBasedOnEmail: false
-    globalConfigEmail: "dev@sunet.se"
+    globalConfigEmail: "${GIT_GLOBAL_CONFIG_EMAIL}"
     globalConfigName: "jenkins"
   sshPublisher:
     commonConfig:
@@ -171,16 +171,20 @@ jobs:
               def delay = currentDate
               def cron_1_minute = '' + delay.getMinutes() + ' ' + delay.getHours() + ' ' + delay[Calendar.DAY_OF_MONTH] + ' ' + (delay.getMonth()+1) + ' *'
               // And after that, run it every 15 minutes to pick up any changes in any github repo
-              cron(cron_1_minute + '\n' + 'H/15  * * * *')
+              cron(cron_1_minute)
           }
           wrappers {
               // DEV_MODE is expanded by jcasc
               if (${DEV_MODE:-false}) {
                   environmentVariables {
                       env('DEV_MODE', '${DEV_MODE}')
-                      env('REPOS', '''${REPOS}''')
-                      env('ORGS', '''${ORGS}''')
                   }
+              }
+              environmentVariables {
+                  env('REPOS', '''${REPOS}''')
+                  env('ORGS', '''${ORGS}''')
+                  env('OVERRIDE_BUILD_BRANCHES', '${OVERRIDE_BUILD_BRANCHES}')
+                  env('DOCKERHUB_URL', '${DOCKERHUB_URL}')
               }
               credentialsBinding {
                   string {
@@ -206,7 +210,7 @@ jobs:
                           url('git://localhost/bootstrap-docker-builds')
                       } else {
                           // When we detect prod, use github directly
-                          github('sunet/bootstrap-docker-builds')
+                          github('${BOOTSTRAP_GIT_URL}')
                       }
                   }
                   branch("master")
@@ -214,7 +218,6 @@ jobs:
           }
           steps {
               // Only run code which we can validate
-              shell('chmod +x "$GPG_WRAPPER" && git -c "gpg.program=$GPG_WRAPPER" verify-commit HEAD')
               jobDsl {
                   targets('github_docker_repos.groovy')
                   additionalClasspath('lib/*.jar')
@@ -234,9 +237,9 @@ jobs:
               // Only send slack notifications in prod mode.
               publishers {
                   slackNotifier {
-                      teamDomain('SUNET')
+                      teamDomain('${SLACK_TEAM}')
                       tokenCredentialId('SLACK_TOKEN')
-                      room('devops-builds')
+                      room('${SLACK_ROOM}')
                       notifyAborted(true)
                       notifyFailure(true)
                       notifyNotBuilt(true)

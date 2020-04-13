@@ -16,19 +16,20 @@ jenkins:
       allowGithubWebHookPermission: true
       authenticatedUserCreateJobPermission: false
       authenticatedUserReadPermission: false
-      organizationNames: "SUNET"
+      organizationNames: "${GITHUB_ORGANIZATIONS}"
       useRepositoryPermissions: true
 
 unclassified:
   gitHubPluginConfig:
-    hookUrl: "https://ci.sunet.se/github-webhook/"
+    hookUrl: "https://${JENKINS_URL}/github-webhook/"
     configs:
     - credentialsId: "GITHUB_TOKEN"
       name: "github"
   location:
-    url: https://ci.sunet.se/
-    adminAddress: dev@sunet.se
+    url: https://${JENKINS_URL}/
+    adminAddress: ${ADMIN_ADDRESS}
   slackNotifier:
-    room: "#devops-builds"
-    teamDomain: "SUNET"
+    room: "#${SLACK_ROOM}"
+    teamDomain: "${SLACK_TEAM}"
     tokenCredentialId: "SLACK_TOKEN"
+    botUser: true
