@@ -12,6 +12,7 @@ services:
       GIT_GLOBAL_CONFIG_EMAIL: "${GIT_GLOBAL_CONFIG_EMAIL-dev@sunet.se}"
       GITHUB_TOKEN: "${GITHUB_TOKEN}"
       OVERRIDE_BUILD_BRANCHES: "${OVERRIDE_BUILD_BRANCHES-}"
+      REPOS_TO_DEPLOY: "${REPOS_TO_DEPLOY-}"
 
     image: docker.sunet.se/sunet/docker-jenkins
     networks:

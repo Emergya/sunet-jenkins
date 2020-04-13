@@ -33,3 +33,93 @@ unclassified:
     teamDomain: "${SLACK_TEAM}"
     tokenCredentialId: "SLACK_TOKEN"
     botUser: true
+
+credentials:
+  system:
+    domainCredentials:
+    - credentials:
+      - usernamePassword:
+          description: "User to call Jenkins QA"
+          id: "JENKINS_QA_USER"
+          scope: 'GLOBAL'
+          username: "${JENKINS_QA_USER_USERNAME}"
+          password: "${JENKINS_QA_USER_TOKEN}"
+
+jobs:
+- script: >
+    job('deploy-environment') {
+        triggers {
+            upstream('${REPOS_TO_DEPLOY}', 'SUCCESS')
+        }
+        wrappers {
+            credentialsBinding {
+                file('SSH_TO_CONNECT_AGENT', 'SSH_TO_CONNECT_AGENT')
+            }
+            environmentVariables {
+                env('AGENT_SERVER', '${AGENT_SERVER}')
+            }
+        }
+        steps {
+            shell('ssh -o StrictHostKeyChecking=no -i "$SSH_TO_CONNECT_AGENT" jenkins@$AGENT_SERVER "sh /opt/django-custom-files/manage-django-data.sh"')
+        }
+        publishers {
+            slackNotifier {
+                teamDomain('${SLACK_TEAM}')
+                tokenCredentialId('SLACK_TOKEN')
+                room('${SLACK_ROOM}')
+                notifyAborted(true)
+                notifyFailure(true)
+                notifyNotBuilt(true)
+                notifyUnstable(true)
+                notifyBackToNormal(true)
+                notifySuccess(true)
+                notifyRepeatedFailure(true)
+                startNotification(true)
+                includeTestSummary(false)
+                includeCustomMessage(false)
+                commitInfoChoice('NONE')
+            }
+        }
+    }
+- script: >
+    if ('${JENKINS_QA_JOBS}' != ''){
+        job('launch-qa-tests') {
+            triggers {
+                upstream('deploy-environment', 'SUCCESS')
+            }
+            wrappers {
+                credentialsBinding {
+                    usernamePassword('JENKINS_QA_USER', 'JENKINS_QA_USER')
+                }
+                environmentVariables {
+                    env('JENKINS_QA_DOMAIN', '${JENKINS_QA_DOMAIN}')
+                }
+            }
+            steps {
+                def jobs = '${JENKINS_QA_JOBS}'.split(';')
+                shell('apt install curl')
+                for (job in jobs) {
+                    job = job.replaceAll(' ', '%20')
+                    shell('curl -u "$JENKINS_QA_USER" --request POST "https://$JENKINS_QA_DOMAIN/' + job + '"')
+                }
+            }
+            publishers {
+                slackNotifier {
+                    teamDomain('${SLACK_TEAM}')
+                    tokenCredentialId('SLACK_TOKEN')
+                    room('${SLACK_ROOM}')
+                    notifyAborted(true)
+                    notifyFailure(true)
+                    notifyNotBuilt(true)
+                    notifyUnstable(true)
+                    notifyBackToNormal(true)
+                    notifySuccess(true)
+                    notifyRepeatedFailure(true)
+                    startNotification(true)
+                    includeTestSummary(false)
+                    includeCustomMessage(false)
+                    commitInfoChoice('NONE')
+                }
+            }
+        }
+    }

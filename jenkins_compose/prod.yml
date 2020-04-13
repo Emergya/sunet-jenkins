@@ -18,6 +18,11 @@ services:
       JENKINS_URL: "${JENKINS_URL-ci.sunet.se}"
       REPOS: "${REPOS-}"
       ORGS: "${ORGS-}"
+      AGENT_SERVER: "${AGENT_SERVER-}"
+      JENKINS_QA_USER_USERNAME: "${JENKINS_QA_USER_USERNAME-}"
+      JENKINS_QA_USER_TOKEN: "${JENKINS_QA_USER_TOKEN-}"
+      JENKINS_QA_DOMAIN: "${JENKINS_QA_DOMAIN-}"
+      JENKINS_QA_JOBS: "${JENKINS_QA_JOBS-}"
 
     volumes:
 # Enable named jenkins_home volume if you would like a persistent jenkins_home
@@ -33,6 +38,7 @@ services:
       - DOCKER_SERVER_CA_CERTIFICATE
       - DOCKER_CLIENT_CERTIFICATE
       - DOCKER_CLIENT_KEY
+      - SSH_TO_CONNECT_AGENT
 
   pound:
     volumes:
@@ -71,3 +77,5 @@ secrets:
     file: ${DOCKER_CLIENT_KEY:?DOCKER_CLIENT_KEY not set, set it in .env and point it to the right file}
   GNUPG_KEYRING:
     file: ${GNUPG_KEYRING:?GNUPG_KEYRING not set, set it in .env and point it to the right file}
+  SSH_TO_CONNECT_AGENT:
+    file: ${SSH_TO_CONNECT_AGENT:?SSH_TO_CONNECT_AGENT not set, set it in .env and point it to the right file}

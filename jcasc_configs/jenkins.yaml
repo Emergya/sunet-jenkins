@@ -185,6 +185,7 @@ jobs:
                   env('ORGS', '''${ORGS}''')
                   env('OVERRIDE_BUILD_BRANCHES', '${OVERRIDE_BUILD_BRANCHES}')
                   env('DOCKERHUB_URL', '${DOCKERHUB_URL}')
+                  env('REPOS_TO_DEPLOY', '${REPOS_TO_DEPLOY}')
               }
               credentialsBinding {
                   string {
