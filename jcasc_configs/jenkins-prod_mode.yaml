@@ -60,7 +60,7 @@ jobs:
             }
         }
         steps {
-            shell('ssh -o StrictHostKeyChecking=no -i "$SSH_TO_CONNECT_AGENT" jenkins@$AGENT_SERVER "sh /opt/django-custom-files/manage-django-data.sh"')
+            shell('ssh -o StrictHostKeyChecking=no -i "$SSH_TO_CONNECT_AGENT" jenkins@$AGENT_SERVER "bash /opt/django-custom-files/manage-django-data.sh"')
         }
         publishers {
             slackNotifier {
