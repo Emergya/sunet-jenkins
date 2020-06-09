@@ -61,6 +61,10 @@ jobs:
         }
         steps {
             shell('ssh -o StrictHostKeyChecking=no -i "$SSH_TO_CONNECT_AGENT" jenkins@$AGENT_SERVER "bash /opt/django-custom-files/manage-django-data.sh"')
+            shell('docker images | grep docker-ni | tail -n +4 | awk \'{ print $3 }\' | xargs docker rmi || true')
+            shell('docker images | grep sri-front | tail -n +4 | awk \'{ print $3 }\' | xargs docker rmi || true')
+            shell('docker images | grep docker-jenkins-job | tail -n +4 | awk \'{ print $3 }\' | xargs docker rmi || true')
+            shell('docker rmi $(docker images | grep "^<none>" | awk \'{ print $3 }\') || true')
         }
         publishers {
             slackNotifier {
